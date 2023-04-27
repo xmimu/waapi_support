@@ -38,6 +38,12 @@ class CreateConflict:
     merge = 'merge'
 
 
+class ImportOperation:
+    create_new = 'createNew'
+    use_existing = 'useExisting'
+    replace_existing = 'replaceExisting'
+
+
 class MyClient(WaapiClient):
 
     def __init__(self, port=None, url=None, allow_exception=False, callback_executor=SequentialThreadExecutor):
@@ -130,6 +136,18 @@ class MyClient(WaapiClient):
     def get_children(self, w_obj):
         return self.get(w_obj, select=QuerySelect.children)
 
+    def get_children_contains(self, w_obj, name):
+        return self.get(w_obj, select=QuerySelect.children, where=QueryWhere.contains(name))
+
+    def get_children_matches(self, w_obj, name):
+        return self.get(w_obj, select=QuerySelect.children, where=QueryWhere.matches(name))
+
+    def get_children_type_is(self, w_obj, w_type):
+        return self.get(w_obj, select=QuerySelect.children, where=QueryWhere.type_is(w_type))
+
+    def get_children_category_is(self, w_obj, category):
+        return self.get(w_obj, select=QuerySelect.children, where=QueryWhere.category_is(category))
+
     def get_descendants(self, w_obj):
         return self.get(w_obj, select=QuerySelect.descendants)
 
@@ -175,6 +193,16 @@ class MyClient(WaapiClient):
     def get_references_category_is(self, w_obj, category):
         return self.get(w_obj, select=QuerySelect.references, where=QueryWhere.category_is(category))
 
+    def get_bank_inclusions(self, w_obj) -> list:
+        '''get event id list in bank'''
+        data = []
+        args = {'soundbank': w_obj}
+        result = self.call(URI.ak_wwise_core_soundbank_getinclusions, args)
+        if result and result['inclusions']:
+            for i in result['inclusions']:
+                data.append(i['object'])
+        return data
+
     # endregion
 
     # region 创建相关 实例方法
@@ -201,34 +229,20 @@ class MyClient(WaapiClient):
 
     # endregion
 
+    # region 导入相关 实例方法
 
-if __name__ == '__main__':
-    from waapi_object import WaapiObject
-    from pprint import pprint
+    def import_audio(self, imports,
+                     importOperation=ImportOperation.use_existing,
+                     autoAddToSourceControl=True,
+                     return_list=SMALL_RETURN) -> list:
+        args = {
+            'importOperation': importOperation,
+            'imports': imports,
+            'autoAddToSourceControl': autoAddToSourceControl
+        }
+        options = {'return': return_list}
+        result = self.call(URI.ak_wwise_core_audio_import, args, options=options)
 
-    try:
-        with MyClient(allow_exception=False) as client:
-            info = client.get_info()
-            selected_id = client.get_selected_objects()[0]['id']
-            print(client.get_properties(selected_id))
+        return result['objects'] if result and result['objects'] else []
 
-            # print(client.get_from_type(WaapiObject.SoundBank))
-            #
-            # print(client.get('hello', select=QuerySelect.parent))
-            # print(client.get('hello', where=QueryWhere.type_is(WaapiObject.Sound)))
-            #
-            # print(client.get_descendants_contains(selected_id, 'hello'))
-            # print(client.get_descendants_matches(selected_id, 'hello'))
-            # print(client.get_descendants_type_is(selected_id, WaapiObject.Sound))
-
-            # client.create(selected_id, WaapiObject.Sound, 'name', Volume=-5, IsStreamingEnabled=True)
-
-            path = RootPath.actor_mixer_hierarchy
-            pprint(client.get_descendants(path))
-
-            client.disconnect()
-
-    except CannotConnectToWaapiException:
-        print('WAAPI 连接失败！请检查是否已启用 WAAPI ！')
-    # except Exception as e:
-    #     print(f'错误：{e}')
+    # endregion
