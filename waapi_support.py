@@ -50,6 +50,7 @@ class MyClient(WaapiClient):
         if port is not None and url is None:
             url = f'ws://127.0.0.1:{port}/waapi'
         super().__init__(url, allow_exception, callback_executor)
+        self.set_full_return()
 
     # region 获取相关 实例方法
     def get_info(self):
@@ -60,9 +61,18 @@ class MyClient(WaapiClient):
         if result:
             return result['version']['displayName'].replace('v', '')
 
+    def set_full_return(self):
+        ver_text = self.get_version()
+        if ver_text.startswith('2019'):
+            self.full_return = rt_2019
+        if ver_text.startswith('2021'):
+            self.full_return = rt_2021
+        if ver_text.startswith('2022'):
+            self.full_return = rt_2022
+
     def __gen_options(self, return_list: list, full_return: bool = False):
         if full_return:
-            options = {'return': FULL_RETURN}
+            options = {'return': self.full_return}
         else:
             options = {'return': SMALL_RETURN}
         if return_list is not None:
