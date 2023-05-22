@@ -84,6 +84,6 @@ rt_isImplicitMute = 'isImplicitMute'
 rt_isImplicitSolo = 'isImplicitSolo'
 rt_points = 'points'
 
-SMALL_RETURN = [rt_id, rt_name, rt_type, rt_path]
+SMALL_RETURN = [rt_id, rt_name, rt_type, rt_path, rt_notes]
 
 FULL_RETURN = rt_2022

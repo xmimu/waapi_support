@@ -215,6 +215,20 @@ class MyClient(WaapiClient):
 
     # endregion
 
+    # region 设置相关 实例方法
+
+    def set_property(self, w_obj, name, value):
+        pass
+
+    def set_notes(self, w_obj, value):
+        args = {'object': w_obj, 'value': value}
+        result = self.call(URI.ak_wwise_core_object_setnotes, args)
+        if result == {}:
+            return True
+        return False
+
+    # endregion
+
     # region 创建相关 实例方法
 
     def create(self, parent, w_type, name,
