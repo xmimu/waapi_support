@@ -10,7 +10,7 @@ class QuerySelect:
     children = 'children'
     descendants = 'descendants'
     ancestors = 'ancestors'
-    references = 'references'
+    references = 'referencesTo'
 
 
 class QueryWhere:
@@ -268,5 +268,20 @@ class MyClient(WaapiClient):
         result = self.call(URI.ak_wwise_core_audio_import, args, options=options)
 
         return result['objects'] if result and result['objects'] else []
+
+    # endregion
+
+    # region UI相关
+
+    def go_to_sync_group(self, obj_list: list, group_suffix=1):
+        if not obj_list: return
+        if not isinstance(group_suffix, int): return
+        if group_suffix not in [1, 2, 3, 4]: return
+
+        args = {
+            "command": f"FindInProjectExplorerSyncGroup{group_suffix}",
+            "objects": obj_list
+        }
+        self.call(URI.ak_wwise_ui_commands_execute, args)
 
     # endregion
