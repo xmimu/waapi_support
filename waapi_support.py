@@ -62,7 +62,15 @@ class MyClient(WaapiClient):
 
     def __gen_options(self, return_list: list, full_return: bool = False):
         if full_return:
-            options = {'return': FULL_RETURN}
+            _ver = self.get_version()
+            if str(_ver).startswith('2022'):
+                options = {'return': FULL_RETURN}
+            if str(_ver).startswith('2021'):
+                options = {'return': FULL_RETURN_2021}
+            if str(_ver).startswith('2019'):
+                options = {'return': FULL_RETURN_2019}
+            else:
+                options = {'return': FULL_RETURN_2019}
         else:
             options = {'return': SMALL_RETURN}
         if return_list is not None:
@@ -133,8 +141,8 @@ class MyClient(WaapiClient):
     def get_parent(self, w_obj):
         return self.get(w_obj, select=QuerySelect.parent)
 
-    def get_children(self, w_obj):
-        return self.get(w_obj, select=QuerySelect.children)
+    def get_children(self, w_obj, return_list=None):
+        return self.get(w_obj, select=QuerySelect.children, return_list=return_list)
 
     def get_children_contains(self, w_obj, name):
         return self.get(w_obj, select=QuerySelect.children, where=QueryWhere.contains(name))
