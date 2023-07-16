@@ -10,7 +10,7 @@ class QuerySelect:
     children = 'children'
     descendants = 'descendants'
     ancestors = 'ancestors'
-    references = 'references'
+    references = 'referencesTo'
 
 
 class QueryWhere:
@@ -50,6 +50,7 @@ class MyClient(WaapiClient):
         if port is not None and url is None:
             url = f'ws://127.0.0.1:{port}/waapi'
         super().__init__(url, allow_exception, callback_executor)
+        self.set_full_return()
 
     # region 获取相关 实例方法
     def get_info(self):
@@ -60,17 +61,18 @@ class MyClient(WaapiClient):
         if result:
             return result['version']['displayName'].replace('v', '')
 
+    def set_full_return(self):
+        ver_text = self.get_version()
+        if ver_text.startswith('2019'):
+            self.full_return = rt_2019
+        if ver_text.startswith('2021'):
+            self.full_return = rt_2021
+        if ver_text.startswith('2022'):
+            self.full_return = rt_2022
+
     def __gen_options(self, return_list: list, full_return: bool = False):
         if full_return:
-            _ver = self.get_version()
-            if str(_ver).startswith('2022'):
-                options = {'return': FULL_RETURN}
-            if str(_ver).startswith('2021'):
-                options = {'return': FULL_RETURN_2021}
-            if str(_ver).startswith('2019'):
-                options = {'return': FULL_RETURN_2019}
-            else:
-                options = {'return': FULL_RETURN_2019}
+            options = {'return': self.full_return}
         else:
             options = {'return': SMALL_RETURN}
         if return_list is not None:
@@ -141,8 +143,8 @@ class MyClient(WaapiClient):
     def get_parent(self, w_obj):
         return self.get(w_obj, select=QuerySelect.parent)
 
-    def get_children(self, w_obj, return_list=None):
-        return self.get(w_obj, select=QuerySelect.children, return_list=return_list)
+    def get_children(self, w_obj):
+        return self.get(w_obj, select=QuerySelect.children)
 
     def get_children_contains(self, w_obj, name):
         return self.get(w_obj, select=QuerySelect.children, where=QueryWhere.contains(name))
@@ -213,6 +215,20 @@ class MyClient(WaapiClient):
 
     # endregion
 
+    # region 设置相关 实例方法
+
+    def set_property(self, w_obj, name, value):
+        pass
+
+    def set_notes(self, w_obj, value):
+        args = {'object': w_obj, 'value': value}
+        result = self.call(URI.ak_wwise_core_object_setnotes, args)
+        if result == {}:
+            return True
+        return False
+
+    # endregion
+
     # region 创建相关 实例方法
 
     def create(self, parent, w_type, name,
@@ -252,5 +268,20 @@ class MyClient(WaapiClient):
         result = self.call(URI.ak_wwise_core_audio_import, args, options=options)
 
         return result['objects'] if result and result['objects'] else []
+
+    # endregion
+
+    # region UI相关
+
+    def go_to_sync_group(self, obj_list: list, group_suffix=1):
+        if not obj_list: return
+        if not isinstance(group_suffix, int): return
+        if group_suffix not in [1, 2, 3, 4]: return
+
+        args = {
+            "command": f"FindInProjectExplorerSyncGroup{group_suffix}",
+            "objects": obj_list
+        }
+        self.call(URI.ak_wwise_ui_commands_execute, args)
 
     # endregion
