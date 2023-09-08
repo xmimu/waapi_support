@@ -63,6 +63,9 @@ class MyClient(WaapiClient):
 
     def set_full_return(self):
         ver_text = self.get_version()
+        if not ver_text:
+            self.full_return = rt_2022
+            return
         if ver_text.startswith('2019'):
             self.full_return = rt_2019
         if ver_text.startswith('2021'):
