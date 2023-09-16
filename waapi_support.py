@@ -44,7 +44,7 @@ class ImportOperation:
     replace_existing = 'replaceExisting'
 
 
-class MyClient(WaapiClient):
+class WaapiClientX(WaapiClient):
 
     def __init__(self, port=None, url=None, allow_exception=False, callback_executor=SequentialThreadExecutor):
         if port is not None and url is None:
