@@ -221,7 +221,12 @@ class WaapiClientX(WaapiClient):
     # region 设置相关 实例方法
 
     def set_property(self, w_obj, name, value):
-        pass
+        args = {
+            'object': w_obj,
+            'property': name,
+            'value': value
+        }
+        return self.call(URI.ak_wwise_core_object_setproperty, args)
 
     def set_notes(self, w_obj, value):
         args = {'object': w_obj, 'value': value}
